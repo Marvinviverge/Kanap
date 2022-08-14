@@ -58,7 +58,7 @@ buttonAdd.addEventListener("click", (e) => {
             if (product.id == informations.id && product.color == informations.color) {
                 return {
                     ...product,
-                    quantity: parseInt(product.quantity) + parseInt(informations.quantity)
+                    quantity: parseInt(product.quantity, 10) + parseInt(informations.quantity, 10)
                 }
             }
             return product

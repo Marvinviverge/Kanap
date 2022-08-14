@@ -1,4 +1,6 @@
 let cart = JSON.parse(localStorage.getItem("cart"))
+let prixTotalCalcul = []
+let quantityTotalCalcul = []
 
 async function fetchInformationsJSON(id) {
     let cartInformations = await fetch('http://localhost:3000/api/products/' + id)
@@ -90,26 +92,60 @@ async function displayProducts() {
         cartItemSettingDelete.appendChild(cartItemSettingDeleteItem)
         cartItemSettingDeleteItem.classList.add("deleteItem")
         cartItemSettingDeleteItem.innerText = "Supprimer"
+
+
+        let articleTotal = cart[i].quantity * cartInformations.price;
+        prixTotalCalcul.push(articleTotal);
+        let quantityTotal = parseInt(cart[i].quantity)
+        quantityTotalCalcul.push(quantityTotal)
     }
+    let reducer = (accumulator, currentValue) => accumulator + currentValue;
+    let prixTotal = prixTotalCalcul.reduce(reducer, 0)
+    let quantiteTotale = quantityTotalCalcul.reduce(reducer, 0)
 
 
-    // prix total 
+    let cartTotalPrice = document.getElementById('totalPrice')
+    cartTotalPrice.innerText = prixTotal
 
-    let prixTotalCalcul = [];
+    let cartTotalquantity = document.getElementById('totalQuantity')
+    cartTotalquantity.innerText = quantiteTotale
 
-    if (cart[i].id === cart[i].id) {
+    /*let errorMsg = document.getElementById('firstNameErrorMsg')
+    errorMsg.innerText = "ci est un message d'erreur"*/
+}
+displayProducts()
+/*// prix total 
+
+async function displayPrice() {
+    for (let i = 0; i < cart.length; i++) {
+        let cartInformations = await fetchInformationsJSON(cart[i].id)
+        let prixTotalCalcul = []
 
         debugger
-        let articleTotal =
-            cart[i].quantity * cartInformations.price;
+        let articleTotal = cart[i].quantity * cartInformations.price;
 
         prixTotalCalcul.push(articleTotal);
 
-        let reducer = (accumulator, curr) => accumulator + curr;
-        let totalPrix = prixTotalCalcul.reduce(reducer);
 
-        let htmlPrix = document.querySelector("#totalPrice");
-        htmlPrix.innerHTML = `${totalPrix}`;
     }
 }
-displayProducts()
+
+/* if (!cart) {
+    cart = []
+}
+
+let result = cart.filter(product => product.id == informations.id && product.color == informations.color);
+
+if (result.length > 0) {
+    cart = cart.map(product => {
+        if (product.id == informations.id && product.color == informations.color) {
+            return {
+                ...product,
+                quantity: parseInt(product.quantity) + parseInt(informations.quantity)
+            }
+        }
+        return product
+    })
+} else {
+    cart.push(informations)
+}*/
