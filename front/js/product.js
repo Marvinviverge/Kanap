@@ -1,71 +1,125 @@
-let url = new URL(window.location.href);
-let id = url.searchParams.get("id");
+document.addEventListener("DOMContentLoaded", function () {
 
-fetch('http://localhost:3000/api/products/' + id)
-    .then(response => {
-        if (response.ok) {
-            return (response.json())
-        }
-    })
-    .then(item => createItem(item))
+    // Création d'une fonction principale "main" qui va appeler les autres fonctions
+    async function main() {
+        let url = new URL(window.location.href);
+        let id = url.searchParams.get("id");
+        let product = await getId(id);
 
-function createItem(item) {
-    let documentItemImg = document.getElementsByClassName('item__img')
-    let img = document.createElement("img")
-    documentItemImg[0].appendChild(img)
-    img.setAttribute("src", item.imageUrl)
-    img.setAttribute("alt", item.altTxt)
-
-    let documentItemTitle = document.getElementById('title')
-    documentItemTitle.innerText = item.name
-
-    let documentItemPrice = document.getElementById('price')
-    documentItemPrice.innerText = item.price
-
-    let documentItemDescription = document.getElementById('description')
-    documentItemDescription.innerText = item.description
-    let documentItemColors = document.getElementById('colors')
-    for (let i = 0; i < item.colors.length; i++) {
-        let option = document.createElement("option")
-        documentItemColors.appendChild(option)
-        option.setAttribute("value", item.colors[i])
-        option.innerText = item.colors[i]
-    }
-}
-
-let buttonAdd = document.getElementById("addToCart")
-
-buttonAdd.addEventListener("click", (e) => {
-    if (!document.getElementById('colors').value || !document.getElementById('quantity').value) {
-        return
+        createItem(product);
+        BtnClick(product);
     }
 
-    let informations = {
-        id: id,
-        color: document.getElementById('colors').value,
-        quantity: document.getElementById('quantity').value
-    };
+    main();
 
-    let cart = JSON.parse(localStorage.getItem("cart"))
-    if (!cart) {
-        cart = []
+    // Création d'une fonction permettant de récupérer les informations d'un produit selectionné
+    async function getId(id) {
+        return fetch('http://localhost:3000/api/products/' + id)
+            .then(function (response) {
+                return response.json()
+            })
+            .catch(function (error) {
+                console.log(error);
+            })
     }
+    // Création d'une fonction permettant d'intégrer/afficher les éléments HTML du produit selectionné
+    function createItem(product) {
 
-    let result = cart.filter(product => product.id == informations.id && product.color == informations.color);
+        // Récupération des éléments parents
+        const title = document.getElementsByTagName("title")[0];
+        const parentImg = document.getElementsByClassName("item__img");
+        const parentName = document.getElementById("title");
+        const parentPrice = document.getElementById("price");
+        const parentDescription = document.getElementById("description");
 
-    if (result.length > 0) {
-        cart = cart.map(product => {
-            if (product.id == informations.id && product.color == informations.color) {
-                return {
-                    ...product,
-                    quantity: parseInt(product.quantity, 10) + parseInt(informations.quantity, 10)
-                }
-            }
-            return product
+        // Création la balise image avec ses attributs
+        const productImg = document.createElement("img");
+        productImg.setAttribute("src", product.imageUrl);
+        productImg.setAttribute("alt", product.altTxt);
+        // Push après notre balise à la fin de la liste.
+        parentImg[0].appendChild(productImg);
+
+        // Changement valeurs à la volée
+        title.innerHTML = product.name;
+        parentName.innerText = product.name;
+        parentPrice.innerText = product.price;
+        parentDescription.innerText = product.description;
+
+        // Création des choix couleur
+        const SelecteurCouleur = document.getElementById("colors")
+        let options = product.colors
+        options.forEach(function (element) {
+            SelecteurCouleur.appendChild(new Option(element, element));
         })
-    } else {
-        cart.push(informations)
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart))
-});
+    // Création d'une classe
+    class ProductClass {
+        constructor(id, name, color, qty) {
+            this.id = id;
+            this.name = name;
+            this.color = color;
+            this.qty = qty;
+        }
+    }
+
+    // Création d'une fonction permettant d'ajouter le produit souhaité au localstorage.
+    function BtnClick(product) {
+
+        let buttonAdd = document.getElementById("addToCart")
+
+        // Création d'un évènement d'écoute au clic sur le bouton "Ajouter au panier"
+        buttonAdd.addEventListener("click", (e) => {
+
+            //
+            if (!document.getElementById('colors').value || !document.getElementById('quantity').value) {
+                return
+            }
+
+            let informations = new ProductClass(
+                product._id,
+                product.name,
+                document.getElementById('colors').value,
+                document.getElementById('quantity').value
+            )
+
+            // Création d'une variable pour récupérer les éléments du localstorage
+            let cart = JSON.parse(localStorage.getItem("cart"))
+
+            // Si le localstorage est vide, création d'un tableau vide
+            if (!cart) {
+                cart = []
+            }
+
+            // Création d'une variable pour comparer les éléments présent dans le tableau à ceux du produit choisi
+            let result = cart.filter(product => product.id === informations.id && product.color === informations.color);
+
+            // S'il y a un résultat, alors on ajoute à ce résultat, sinon on push dans le tableau
+            if (result.length > 0) {
+
+                cart = cart.map(product => {
+                    if (product.id === informations.id && product.color === informations.color) {
+
+                        return {
+                            ...product,
+                            qty: parseInt(informations.qty, 10) + parseInt(product.qty, 10)
+                        }
+                    }
+                    return product
+                })
+            } else {
+                cart.push(informations)
+            }
+
+            // Si le client entre une valeur nulle, alors on affiché un message d'erreur
+            if (document.getElementById('quantity').value == null || document.getElementById('quantity').value == 0) {
+                alert("Merci de selectionner quantité valide");
+                return;
+            }
+
+            // On envoit les informations du tableau au localstorage et on affiche un message de confirmation
+            localStorage.setItem("cart", JSON.stringify(cart))
+            alert('Produit ajouté au panier')
+        })
+    }
+})
