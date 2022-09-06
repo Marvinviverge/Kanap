@@ -5,17 +5,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let cart = JSON.parse(localStorage.getItem("cart"))
 
+        if (!cart) {
+
+            cart = []
+        }
+
         for (let i = 0; i < cart.length; i++) {
             let cartInformations = await fetchInformationsJSON(cart[i].id)
 
             displayProducts(cartInformations, cart[i]);
-            DisplayTotal(cartInformations, cart);
-
-            listenQty(cartInformations)
-            listenDlt(cartInformations)
-
         }
-        Validation(cart);
+        DisplayTotal();
+        listenQty();
+        listenDlt();
+        Validation();
     }
 
     main();
@@ -62,14 +65,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Création d'une fonction permettant d'afficher le prix total du panier ainsi que la quantité totale de produits dans le panier
-    function DisplayTotal(cartInformations, cart) {
+    function DisplayTotal() {
 
         let TotalPrice = 0;
         let TotalQty = 0;
+        let allArticles = document.querySelectorAll(".cart__item")
 
-        for (let product of cart) {
-            TotalPrice += parseInt(product.qty * cartInformations.price);
-            TotalQty += parseInt(product.qty);
+        for (let product of allArticles) {
+
+            let productPrice = parseInt(product.querySelector('.cart__item__content__description p:last-child').textContent)
+            let productQty = parseInt(product.querySelector('.itemQuantity').value)
+            TotalPrice += parseInt(productQty * productPrice);
+            TotalQty += parseInt(productQty);
         }
 
         let cartTotalPrice = document.getElementById('totalPrice');
@@ -77,21 +84,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         cartTotalPrice.innerText = TotalPrice;
         cartTotalquantity.innerText = TotalQty;
-
     }
 
     // Création d'une fonction permettant la modification dynamique de la quantité de produit dans le panier, entraînant modification du prix et de la quantité totale
-    function listenQty(cartInformations) {
+    function listenQty() {
 
         let allQty = document.querySelectorAll(".itemQuantity")
 
         allQty.forEach(function (input) {
             input.addEventListener("change", function (inputevent) {
 
+                // On empêche la saisie de valeur négative ou supérieur à cent, ainsi que la saisie vide
+                if (!inputevent.target.value) {
+                    inputevent.target.value = 1
+                }
+                if (parseInt(inputevent.target.value, 10) < 1) {
+                    inputevent.target.value = 1
+                }
+                if (parseInt(inputevent.target.value, 10) > 100) {
+                    inputevent.target.value = 100
+                }
+
                 let elt = input.closest("article.cart__item")
                 let eltId = elt.getAttribute('data-id')
                 let eltColor = elt.getAttribute('data-color')
-
                 let newCart = JSON.parse(localStorage.getItem("cart"))
 
                 newCart = newCart.map(product => {
@@ -106,14 +122,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 localStorage.setItem("cart", JSON.stringify(newCart))
 
-                DisplayTotal(cartInformations, newCart);
+                DisplayTotal();
             })
         })
 
     }
 
     // Création d'une fonction permettant la suppression dynamique des produits dans le panier, entraînant modification du prix et de la quantité totale
-    function listenDlt(cartInformations) {
+    function listenDlt() {
 
         let Dlt = document.querySelectorAll(".deleteItem")
 
@@ -132,7 +148,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 input.closest("article.cart__item").remove();
 
-                DisplayTotal(cartInformations, newCart);
+                DisplayTotal()
+
+                if (newCart.length < 1) {
+                    window.localStorage.clear()
+                }
             })
         })
 
@@ -197,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     //Création d'une fonction permettant de valider la commande et d'être redirigé vers la page de confirmation
-    function Validation(cart) {
+    function Validation() {
 
         let orderButton = document.getElementById("order");
 

@@ -71,8 +71,15 @@ document.addEventListener("DOMContentLoaded", function () {
         // Création d'un évènement d'écoute au clic sur le bouton "Ajouter au panier"
         buttonAdd.addEventListener("click", (e) => {
 
-            //
-            if (!document.getElementById('colors').value || !document.getElementById('quantity').value) {
+            //On empêche la saisie de valeur négative ou supérieur à cent, ainsi que la saisie vide
+            if ((!document.getElementById('colors').value && (document.getElementById('quantity').value <= 0 || document.getElementById('quantity').value > 100))) {
+                alert("Merci de selectionner une couleur et une quantité valide");
+                return
+            } else if (!document.getElementById('colors').value) {
+                alert("Merci de selectionner une couleur valide");
+                return
+            } else if ((document.getElementById('quantity').value <= 0 || document.getElementById('quantity').value > 100)) {
+                alert("Merci de selectionner une quantité valide");
                 return
             }
 
@@ -111,11 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 cart.push(informations)
             }
 
-            // Si le client entre une valeur nulle, alors on affiché un message d'erreur
-            if (document.getElementById('quantity').value == null || document.getElementById('quantity').value == 0) {
-                alert("Merci de selectionner quantité valide");
-                return;
-            }
+
 
             // On envoit les informations du tableau au localstorage et on affiche un message de confirmation
             localStorage.setItem("cart", JSON.stringify(cart))
